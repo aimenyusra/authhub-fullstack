@@ -1,0 +1,30 @@
+Set-Content -Path .gitignore -Value @'
+# Visual Studio
+.vs/
+*.user
+*.suo
+
+# Build output
+bin/
+obj/
+Debug/
+Release/
+
+# Local secrets
+.env
+.env.*
+!.env.example
+secrets.json
+
+# Frontend
+node_modules/
+dist/
+build/
+
+# Logs
+*.log
+
+# Windows files
+Thumbs.db
+.DS_Store
+'@
