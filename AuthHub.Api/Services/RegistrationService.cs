@@ -44,5 +44,20 @@ namespace AuthHub.Api.Services
             await _context.SaveChangesAsync();
             return user;
         }
+        public async Task<User?> LoginAsync(LoginRequestDto request)
+        {
+            string normalizedEmail = request.Email.Trim().ToLowerInvariant();
+            var user = await _context.Users.FirstOrDefaultAsync(u => u.Email == normalizedEmail);
+            if (user is null)
+            {
+                return null;
+            }
+            bool isPasswordValid = BCrypt.Net.BCrypt.Verify(request.Password, user.PasswordHash);
+            if (!isPasswordValid)
+            {
+                return null;
+            }
+            return user;
+        }
     }
 }

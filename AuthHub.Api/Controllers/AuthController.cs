@@ -37,5 +37,24 @@ namespace AuthHub.Api.Controllers
                 return Conflict(new { message = ex.Message });
             }
         }
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequestDto request)
+        {
+            var user = await _registrationService.LoginAsync(request);
+            if (user is null)
+            {
+                return Unauthorized(new { message = "Invalid email or password." });
+            }
+            var response = new
+            {
+                user.Id,
+                user.FullName,
+                user.Email,
+                user.Role,
+                user.IsEmailVerified,
+                user.CreatedAtUtc
+            };
+            return Ok(response);
+        }
     }
 }
