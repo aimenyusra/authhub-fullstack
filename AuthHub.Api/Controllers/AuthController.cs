@@ -1,5 +1,6 @@
 ﻿using AuthHub.Api.DTOs;
 using AuthHub.Api.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,9 +11,11 @@ namespace AuthHub.Api.Controllers
     public class AuthController : ControllerBase
     {
         private readonly RegistrationService _registrationService;
-        public AuthController(RegistrationService registrationService)
+        private readonly TokenService _tokenService;
+        public AuthController(RegistrationService registrationService, TokenService tokenService)
         {
             _registrationService = registrationService;
+            _tokenService = tokenService;
         }
 
         [HttpPost("register")]
@@ -45,16 +48,38 @@ namespace AuthHub.Api.Controllers
             {
                 return Unauthorized(new { message = "Invalid email or password." });
             }
+            var accessToken = _tokenService.GenerateAccessToken(user);
             var response = new
             {
-                user.Id,
-                user.FullName,
-                user.Email,
-                user.Role,
-                user.IsEmailVerified,
-                user.CreatedAtUtc
+                accessToken,
+                tokenType = "Bearer",
+                expiresIn = 900, // 15 minutes in seconds
+                user = new
+                {
+                    user.Id,
+                    user.FullName,
+                    user.Email,
+                    user.Role,
+                    user.IsEmailVerified,
+                    user.CreatedAtUtc
+                }
             };
+         
             return Ok(response);
         }
+        [Authorize]
+        [HttpGet("me")]
+        public IActionResult Me()
+        {
+            return Ok(new
+            {
+                message = "You are authenticated.",
+                userId = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Sub)?.Value,
+                fullName = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Name)?.Value,
+                email = User.FindFirst(System.IdentityModel.Tokens.Jwt.JwtRegisteredClaimNames.Email)?.Value,
+                role = User.FindFirst(System.Security.Claims.ClaimTypes.Role)?.Value
+            });
+        }
+
     }
 }
