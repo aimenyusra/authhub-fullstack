@@ -12,10 +12,12 @@ namespace AuthHub.Api.Controllers
     {
         private readonly RegistrationService _registrationService;
         private readonly TokenService _tokenService;
-        public AuthController(RegistrationService registrationService, TokenService tokenService)
+        private readonly RefreshTokenService _refreshTokenService;
+        public AuthController(RegistrationService registrationService, TokenService tokenService, RefreshTokenService refreshTokenService)
         {
             _registrationService = registrationService;
             _tokenService = tokenService;
+            _refreshTokenService = refreshTokenService;
         }
 
         [HttpPost("register")]
@@ -49,9 +51,12 @@ namespace AuthHub.Api.Controllers
                 return Unauthorized(new { message = "Invalid email or password." });
             }
             var accessToken = _tokenService.GenerateAccessToken(user);
+            Guid familyId = Guid.NewGuid();
+            var createdRefreshToken = await _refreshTokenService.CreateRefreshTokenAsync(user.Id, familyId);
             var response = new
             {
                 accessToken,
+                refreshToken= createdRefreshToken.RawToken,
                 tokenType = "Bearer",
                 expiresIn = 900, // 15 minutes in seconds
                 user = new
