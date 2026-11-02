@@ -107,5 +107,11 @@ namespace AuthHub.Api.Controllers
                 expiresIn = 900, // 15 minutes in seconds
             });
         }
+        [HttpPost("logout")]
+        public async Task<IActionResult> Logout (RefreshRequestDto request)
+        {
+            await _refreshTokenService.LogoutAsync(request.RefreshToken);
+            return NoContent();
+        }
     }
 }

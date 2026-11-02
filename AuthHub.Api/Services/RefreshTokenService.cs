@@ -49,7 +49,7 @@ namespace AuthHub.Api.Services
             string tokenHash = HashToken(rawToken);
             await using var transaction = await _context.Database.BeginTransactionAsync();
             var existingToken = await _context.RefreshTokens
-                                              .Include(token=> token.User)
+                                              .Include(token => token.User)
                                               .FirstOrDefaultAsync(token => token.TokenHash == tokenHash);
             if (existingToken == null)
             {
@@ -86,8 +86,28 @@ namespace AuthHub.Api.Services
             await _context.SaveChangesAsync();
             await transaction.CommitAsync();
             return new RefreshRotationResult(true, false, existingToken.User, newRawToken);
-
         }
+
+        public async Task LogoutAsync(string rawToken)
+        {
+
+            string tokenHash = HashToken(rawToken);
+            var token = await _context.RefreshTokens
+                .FirstOrDefaultAsync(t => t.TokenHash == tokenHash);
+            if (token is null)
+                return;
+            var activeTokens = await _context.RefreshTokens
+                .Where(t => t.FamilyId == token.FamilyId && t.RevokedAtUtc == null)
+                .ToListAsync();
+            DateTime now = DateTime.UtcNow;
+            foreach (var activeToken in activeTokens)
+            {
+                activeToken.RevokedAtUtc = now;
+
+            }
+            await _context.SaveChangesAsync();
+        }
+            
     }
     public record RefreshRotationResult(
         bool Succes,
