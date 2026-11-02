@@ -86,5 +86,26 @@ namespace AuthHub.Api.Controllers
             });
         }
 
+        [HttpPost("refresh")]
+        public async Task<IActionResult> Refresh(RefreshRequestDto request)
+        {
+            var result = await _refreshTokenService.RotateRefreshTokenAsync(request.RefreshToken);
+            if(!result.Succes || result.User is null)
+            {
+                return Unauthorized(new
+                {
+                    message = "Invalid or revoked refresh token.Please log in again"
+                });
+
+            }
+            var newAccessToken = _tokenService.GenerateAccessToken(result.User);
+            return Ok(new
+            {
+                accessToken = newAccessToken,
+                refreshToken = result.RawToken,
+                tokenType = "Bearer",
+                expiresIn = 900, // 15 minutes in seconds
+            });
+        }
     }
 }
