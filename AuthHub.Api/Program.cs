@@ -1,4 +1,5 @@
 using AuthHub.Api.Data;
+using AuthHub.Api.Middleware;
 using AuthHub.Api.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
@@ -61,6 +62,7 @@ builder.Services
     });
 builder.Services.AddAuthorization();
 var app = builder.Build();
+                    
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -69,7 +71,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI();
 }
-
+app.UseMiddleware<GlobalExceptionMiddleware>();
 app.UseHttpsRedirection();
 app.UseAuthentication();
 app.UseAuthorization();
