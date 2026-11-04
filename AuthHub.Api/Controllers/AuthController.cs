@@ -113,5 +113,6 @@ namespace AuthHub.Api.Controllers
             await _refreshTokenService.LogoutAsync(request.RefreshToken);
             return NoContent();
         }
+       
     }
 }
